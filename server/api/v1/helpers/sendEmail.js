@@ -1,6 +1,6 @@
 import responseMsg from "./responseMsg";
 import nodemailer from "nodemailer";
-const sendEmail=async (email, reason )=>{
+const sendEmail=async (email,name, reason )=>{
     const transport = nodemailer.createTransport({
         service: "gmail",
         auth: {
@@ -12,7 +12,7 @@ const sendEmail=async (email, reason )=>{
         from: "bihireb1@gmail.com",
         to: `${email}`,
         subject: `employee management`,
-        text: `This is to inform you that ${reason}`
+        html: `<p>Hello ${name}</p>,</br> <p>${reason}</p>`
     };
     await transport.sendMail(mailOptio, (err, json) => {
         if (err) responseMsg.errorMsg(

@@ -11,4 +11,10 @@ export default class responseMsg {
             error: message
         });
     }
+    static async successDataMsg(res, status, message) {
+        res.status(status).json({
+            status: status,
+            data: message
+        });
+    }
 }

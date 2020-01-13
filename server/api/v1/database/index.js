@@ -25,8 +25,8 @@ const createManagerTables = () => {
       birth_date TIMESTAMPTZ NOT NULL,
       status VARCHAR(128) NOT NULL,
       position VARCHAR(128) NOT NULL,
-      phone_number VARCHAR(128) NOT NULL,
-      national_id VARCHAR(128) NOT NULL
+      phone_number VARCHAR(128) UNIQUE NOT NULL,
+      national_id VARCHAR(128) UNIQUE NOT NULL
     )`;
     pool
         .query(queryText)
@@ -53,8 +53,8 @@ const createEmployeeTables = () => {
       birth_date TIMESTAMPTZ NOT NULL,
       status VARCHAR(128) NOT NULL,
       position VARCHAR(128) NOT NULL,
-      phone_number VARCHAR(128) NOT NULL,
-      national_id VARCHAR(128) NOT NULL,
+      phone_number VARCHAR(128) UNIQUE NOT NULL,
+      national_id VARCHAR(128) UNIQUE NOT NULL,
       manager_id INTEGER NOT NULL
     )`;
     pool

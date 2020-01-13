@@ -9,7 +9,7 @@ const pool = new Pool({
 });
 export default class EmployeeController {
     /**
-    * @description This helps the authorized Manager to fetch all employees or search
+    * @description This helps the authorized Manager to fetch all employees or search by first_name, last_name, email, position or phone_number
     * @param  {object} req - The request object
     * @param  {object} res - The response object
     */
@@ -19,23 +19,16 @@ export default class EmployeeController {
             if (search) {
                 const text = `SELECT * FROM employees WHERE first_name LIKE '%${search}%' OR last_name LIKE '%${search}%' OR email LIKE '%${search}%' OR position LIKE '%${search}%' OR phone_number LIKE '%${search}%'`
                 const { rows } = await pool.query(text)
-                res.status(200).json({
-                    status: 200,
-                    data: rows
-                })
+
+                responseMsg.successDataMsg(res, 200, rows)
             } else {
                 const text = `SELECT * FROM employees`
                 const { rows } = await pool.query(text)
-                res.status(200).json({
-                    status: 200,
-                    data: rows
-                })
+
+                responseMsg.successDataMsg(res, 200, rows)
             }
         } catch (error) {
-            res.status(500).send({
-                error: 'bro error'
-            })
-            console.log(error)
+            responseMsg.errorMsg(res, 500, error)
         }
     }
     /**
@@ -50,17 +43,11 @@ export default class EmployeeController {
         const values = [value.email, value.first_name, value.last_name, value.phone_number, value.national_id, value.position, value.status, value.birth_date, token.id]
         try {
             const { rows } = await pool.query(text, values);
-            sendEmail(rows[0].email, 'an accoutnt at your name was created our api teamwork')
-            res.status(201).json({
-                status: 201,
-                data: rows[0]
-
-            })
+            sendEmail(rows[0].email, rows[0].first_name,'an accoutnt at your name was created our api teamwork')
+            responseMsg.successDataMsg(res, 201, rows[0])
+            
         } catch (error) {
-            if (error && error.routine === '_bt_check_unique') return res.status(403).json({
-                status: 403,
-                error: 'Email provided exist already'
-            })
+            if (error && error.routine === '_bt_check_unique') return responseMsg.errorMsg(res, 403, 'Email, National id or Phone number provided exist already')
         }
         
     }
@@ -76,12 +63,8 @@ export default class EmployeeController {
         const fetch_text = 'SELECT * FROM employees WHERE id = $1'
 
         const { rows } = await pool.query(fetch_text, [value.employee_id])
-        if (!rows[0]) {
-            return res.status(404).json({
-                status: 404,
-                message: 'employee not found'
-            });
-        }
+        if (!rows[0]) return responseMsg.errorMsg(res, 404, 'employee not found')
+        
         const newUser = [
             value.first_name ? value.first_name :rows[0].first_name,
             value.last_name ? value.last_name :rows[0].last_name ,
@@ -94,10 +77,7 @@ export default class EmployeeController {
         ]
 
         const response = await pool.query(updateOne, await newUser);
-        res.status(200).json({
-            status: 200,
-            data: response.rows[0]
-        })
+        responseMsg.successDataMsg(res, 200, response.rows[0])
     }
     /**
     * @description This helps the authorized Manager to update an existing employee status
@@ -108,16 +88,9 @@ export default class EmployeeController {
         const value = req.value
         const updateOne = `UPDATE employees SET status=($2) where id=($1) returning *`
         const {rows} = await pool.query(updateOne, [value.employee_id, value.status])
-        if (rows.length == 0) {
-            return res.status(404).json({
-                status: 404,
-                message: 'employee not found'
-            });
-        }
-        res.status(200).json({
-            status: 200,
-            data: rows[0]
-        })
+        if (rows.length == 0) return responseMsg.errorMsg(res, 404, 'employee not found')
+        
+        responseMsg.successDataMsg(res, 200, rows[0])
     }
     /**
     * @description This helps the authorized Manager to suspend an existing employee status
@@ -128,53 +101,12 @@ export default class EmployeeController {
         const value = req.value
         const updateOne = `UPDATE employees SET status=($2) where id=($1) returning *`
         const { rows } = await pool.query(updateOne, [value.employee_id, value.status])
-        if (rows.length == 0) {
-            return res.status(404).json({
-                status: 404,
-                message: 'employee not found'
-            });
-        }
-        res.status(200).json({
-            status: 200,
-            data: rows[0]
-        })
+        if (rows.length == 0) return responseMsg.errorMsg(res, 404, 'employee not found')
+        
+        responseMsg.successDataMsg(res, 200, rows[0])
     }
     /**
-    * @description This helps the authorized User to fetch a specific red-flag/intervention
-    * @param  {object} req - The request object
-    * @param  {object} res - The response object
-    */
-    static async search(req, res) {
-        const { red_flag_id } = req.params
-        if (!checkInt(red_flag_id)) {
-            responseMsg.errorMsg(res, 403, 'employee must be an integer and less than 8 in length')
-        }
-        const fetch_text = 'SELECT * FROM flags WHERE id = $1'
-
-        const { rows } = await pool.query(fetch_text, [red_flag_id])
-        if (!rows[0]) return responseMsg.errorMsg(res, 404, 'employee not found')
-
-        const newItem = {
-            id: rows[0].id,
-            createdBy: rows[0].created_by,
-            title: rows[0].title,
-            type: rows[0].type,
-            comment: rows[0].comment,
-            status: rows[0].status,
-            location: rows[0].location,
-            labels: rows[0].labels,
-            images: rows[0].images,
-            videos: rows[0].videos,
-            createdOn: rows[0].created_on
-        }
-        res.status(200).json({
-            status: 200,
-            data: newItem
-        })
-    }
-    
-    /**
-    * @description This helps the authorized User to delete an employee
+    * @description This helps the authorized Manager to delete an employee
     * @param  {object} req - The request object
     * @param  {object} res - The response object
     */
@@ -188,15 +120,8 @@ export default class EmployeeController {
         const deleteOne = `DELETE FROM employees WHERE id=($1) returning *`
 
         const {rows} = await pool.query(deleteOne, [employee_id]);
-        if (rows.length == 0) {
-            return res.status(404).json({
-                status: 404,
-                message: 'employee not found'
-            });
-        }
-        res.status(200).json({
-            status: 200,
-            data: rows[0]
-        })
+        if (rows.length == 0) return responseMsg.errorMsg(res, 404, 'employee not found')
+        
+        responseMsg.successDataMsg(res, 200, rows[0])
     }
 }
