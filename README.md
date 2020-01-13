@@ -77,10 +77,10 @@ npm start
 | ------- | --- | --- |
 | / | GET | The index (welcome message) |
 | /api/v1/auth/signup | POST | Signup as new Manager |
-| /api/v1/auth/confirm/`:email_token` | POST | to confirm the incoming email Token from email |
+| /api/v1/auth/confirm/`:email_token` | PATCH | to confirm the incoming email Token from email |
 | /api/v1/auth/signin | POST | Signin a registered manager |
 | /api/v1/auth/reset/request | POST | To send a request with for password |
-| /api/v1/auth/reset/confirm/`:email_token` | POST | to confirm the incoming email Token from email |
+| /api/v1/auth/reset/confirm/`:email_token` | PATCH | to confirm the incoming email Token from email |
 | /api/v1/employees | POST | POST an an employee |
 | /api/v1/employees/`employee-id` | PATCH | Edit a specific employee info |
 | /api/v1/employees/`employee-id`/activate | PATCH | Update a specific employee's status to activated |
