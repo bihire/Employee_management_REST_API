@@ -17,18 +17,6 @@ A Restful API and database for an employee management system
 
 [Express](http://expressjs.com/) : NodeJs framework.
 
-[Mocha, Chai and Supertest](https://www.youtube.com/watch?v=MLTRHc5dk6s) : Testing Framework.
-
-[Airbnb](https://github.com/airbnb/javascript) : Javascript style Guide.
-
-[Travis](https://travis-ci.org/) : Continuous Integration.
-
-[nyc](https://github.com/istanbuljs/nyc) : Test coverage.
-
-[Coveralls](https://coveralls.io/) : Git badge.
-
-[Codeclimate](https://codeclimate.com/) : Git badge.
-
 [Heroku](https://www.heroku.com/) : Deployment.
 
 [Postman](https://www.getpostman.com/) : Documentation
@@ -82,17 +70,6 @@ Export the port number to be accessible in the file
 npm start
 ```
 
-## Run tests
-
-```
-npm run test
-```
-
-## Run coveralls
-
-```
-npm run ci
-```
 
 ## API ENDPOINTS
 
@@ -100,13 +77,16 @@ npm run ci
 | ------- | --- | --- |
 | / | GET | The index (welcome message) |
 | /api/v1/auth/signup | POST | Signup as new Manager |
+| /api/v1/auth/confirm/`:email_token` | POST | to confirm the incoming email Token from email |
 | /api/v1/auth/signin | POST | Signin a registered manager |
+| /api/v1/auth/reset/request | POST | To send a request with for password |
+| /api/v1/auth/reset/confirm/`:email_token` | POST | to confirm the incoming email Token from email |
 | /api/v1/employees | POST | POST an an employee |
 | /api/v1/employees/`employee-id` | PATCH | Edit a specific employee info |
 | /api/v1/employees/`employee-id`/activate | PATCH | Update a specific employee's status to activated |
 | /api/v1/employees/`employee-id`/suspend | PATCH | Update a specific employee's status to suspended|
 | /api/v1/employees | GET | Get all the employees |
-| /api/v1/employees `?:search` | GET | Get all the matching employees |
+| /api/v1/employees `?search` | GET | Get all the matching employees of search query |
 | /api/v1/employees/`employee-id` | DELETE | Delete an employee |
 
 
