@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken'
 import { Pool } from 'pg'
 import hashPassword from '../helpers/hash'
+import sendEmail from '../helpers/sendEmail'
 import comparePassword from '../helpers/compareHash'
 import dotenv from 'dotenv'
 dotenv.config()
@@ -24,12 +25,7 @@ export default class AuthanticationController {
             const values = [value.email, value.first_name, value.last_name, value.password, value.phone_number, value.national_id, value.position, 'active', value.birth_date]
 
             const { rows } = await pool.query(text, values)
-
-            // const newValue = {
-            //     id: rows[0].id,
-            //     isAdmin: rows[0].is_admin
-            // }
-            // const token = jwt.sign(newValue, process.env.SECRET);
+            sendEmail(rows[0].email, 'an accoutnt at your name was created our api teamwork cluick to activate it')
             res.status(201).send({
                 status: 201,
                 message: "User created successfully",

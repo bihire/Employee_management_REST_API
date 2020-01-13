@@ -8,5 +8,5 @@ app.get("/api/v1", (req, res) => {
     responseMsg.successMsg(res, 200, 'initializing successful')
 });
 app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/managers", employeeRoutes);
+app.use("/api/v1/employees", employeeRoutes);
 

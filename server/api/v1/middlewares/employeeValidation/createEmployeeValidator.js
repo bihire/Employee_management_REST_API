@@ -3,6 +3,7 @@ import responseMsg from '../../helpers/responseMsg'
 
 import joi from "joi"
 export default (req, res, next) => {
+    const token = res.token
     if (token.status !== 'active' && token.position !== 'manager') responseMsg.errorMsg(res, 400, 'you have no rights to assign employees')
 
     const {

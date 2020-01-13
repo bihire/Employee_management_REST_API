@@ -1,10 +1,43 @@
 import { Pool } from 'pg'
 import responseMsg from '../helpers/responseMsg'
+import checkInt from '../helpers/checkInt'
+import sendEmail from '../helpers/sendEmail'
+
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL
 });
 export default class EmployeeController {
+    /**
+    * @description This helps the authorized Manager to fetch all employees or search
+    * @param  {object} req - The request object
+    * @param  {object} res - The response object
+    */
+    static async index(req, res) {
+        try {
+            const search = req.query.search
+            if (search) {
+                const text = `SELECT * FROM employees WHERE first_name LIKE '%${search}%' OR last_name LIKE '%${search}%' OR email LIKE '%${search}%' OR position LIKE '%${search}%' OR phone_number LIKE '%${search}%'`
+                const { rows } = await pool.query(text)
+                res.status(200).json({
+                    status: 200,
+                    data: rows
+                })
+            } else {
+                const text = `SELECT * FROM employees`
+                const { rows } = await pool.query(text)
+                res.status(200).json({
+                    status: 200,
+                    data: rows
+                })
+            }
+        } catch (error) {
+            res.status(500).send({
+                error: 'bro error'
+            })
+            console.log(error)
+        }
+    }
     /**
     * @description This helps the authorized Manager to create a new employee
     * @param  {object} req - The request object
@@ -17,7 +50,7 @@ export default class EmployeeController {
         const values = [value.email, value.first_name, value.last_name, value.phone_number, value.national_id, value.position, value.status, value.birth_date, token.id]
         try {
             const { rows } = await pool.query(text, values);
-
+            sendEmail(rows[0].email, 'an accoutnt at your name was created our api teamwork')
             res.status(201).json({
                 status: 201,
                 data: rows[0]
@@ -46,7 +79,7 @@ export default class EmployeeController {
         if (!rows[0]) {
             return res.status(404).json({
                 status: 404,
-                message: 'red-flag-id not found'
+                message: 'employee not found'
             });
         }
         const newUser = [
@@ -66,127 +99,104 @@ export default class EmployeeController {
             data: response.rows[0]
         })
     }
-    // /**
-    // * @description This helps the authorized User to update an existing red-flag/intervention comment
-    // * @param  {object} req - The request object
-    // * @param  {object} res - The response object
-    // */
-    // static async updateComment(req, res) {
-    //     const value = req.value
-    //     const updateOne = `UPDATE flags SET comment=($2) where id=($1) returning *`;
-    //     const fetch_text = 'SELECT * FROM flags WHERE id = $1'
+    /**
+    * @description This helps the authorized Manager to update an existing employee status
+    * @param  {object} req - The request object
+    * @param  {object} res - The response object
+    */
+    static async activate(req, res) {
+        const value = req.value
+        const updateOne = `UPDATE employees SET status=($2) where id=($1) returning *`
+        const {rows} = await pool.query(updateOne, [value.employee_id, value.status])
+        if (rows.length == 0) {
+            return res.status(404).json({
+                status: 404,
+                message: 'employee not found'
+            });
+        }
+        res.status(200).json({
+            status: 200,
+            data: rows[0]
+        })
+    }
+    /**
+    * @description This helps the authorized Manager to suspend an existing employee status
+    * @param  {object} req - The request object
+    * @param  {object} res - The response object
+    */
+    static async suspend(req, res) {
+        const value = req.value
+        const updateOne = `UPDATE employees SET status=($2) where id=($1) returning *`
+        const { rows } = await pool.query(updateOne, [value.employee_id, value.status])
+        if (rows.length == 0) {
+            return res.status(404).json({
+                status: 404,
+                message: 'employee not found'
+            });
+        }
+        res.status(200).json({
+            status: 200,
+            data: rows[0]
+        })
+    }
+    /**
+    * @description This helps the authorized User to fetch a specific red-flag/intervention
+    * @param  {object} req - The request object
+    * @param  {object} res - The response object
+    */
+    static async search(req, res) {
+        const { red_flag_id } = req.params
+        if (!checkInt(red_flag_id)) {
+            responseMsg.errorMsg(res, 403, 'employee must be an integer and less than 8 in length')
+        }
+        const fetch_text = 'SELECT * FROM flags WHERE id = $1'
 
-    //     const { rows } = await pool.query(fetch_text, [value.red_flag_id])
-    //     if (!rows[0]) {
-    //         return res.status(404).json({
-    //             status: 404,
-    //             message: 'red-flag-id not found'
-    //         });
-    //     }
+        const { rows } = await pool.query(fetch_text, [red_flag_id])
+        if (!rows[0]) return responseMsg.errorMsg(res, 404, 'employee not found')
 
-    //     if (res.token.id != rows[0].created_by || rows[0].status !== 'draft') return responseMsg.errorMsg(res, 403, 'you have no rights over this endpoint')
-    //     const response = await pool.query(updateOne, [value.red_flag_id, value.comment]);
-    //     res.status(200).json({
-    //         status: 200,
-    //         data: [{
-    //             id: response.rows[0].id,
-    //             message: 'Updated red-flag record’s comment'
-    //         }]
-    //     })
-    // }
-    // /**
-    // * @description This helps the authorized User to fetch a specific red-flag/intervention
-    // * @param  {object} req - The request object
-    // * @param  {object} res - The response object
-    // */
-    // static async getOne(req, res) {
-    //     const { red_flag_id } = req.params
-    //     if (!checkInt(red_flag_id)) {
-    //         responseMsg.errorMsg(res, 403, 'red-flag-id must be an integer and less than 8 in length')
-    //     }
-    //     const fetch_text = 'SELECT * FROM flags WHERE id = $1'
+        const newItem = {
+            id: rows[0].id,
+            createdBy: rows[0].created_by,
+            title: rows[0].title,
+            type: rows[0].type,
+            comment: rows[0].comment,
+            status: rows[0].status,
+            location: rows[0].location,
+            labels: rows[0].labels,
+            images: rows[0].images,
+            videos: rows[0].videos,
+            createdOn: rows[0].created_on
+        }
+        res.status(200).json({
+            status: 200,
+            data: newItem
+        })
+    }
+    
+    /**
+    * @description This helps the authorized User to delete an employee
+    * @param  {object} req - The request object
+    * @param  {object} res - The response object
+    */
+    static async delete(req, res) {
+        const { employee_id } = req.params
+        const token = res.token
 
-    //     const { rows } = await pool.query(fetch_text, [red_flag_id])
-    //     if (!rows[0]) return responseMsg.errorMsg(res, 404, 'red-flag-id not found')
+        if (token.status !== 'active' && token.position !== 'manager') responseMsg.errorMsg(res, 400, 'you have no rights to assign employees')
+        if (!checkInt(employee_id)) return responseMsg.errorMsg(res, 403, 'employee must be an integer and less than 8 in length')
 
-    //     const newItem = {
-    //         id: rows[0].id,
-    //         createdBy: rows[0].created_by,
-    //         title: rows[0].title,
-    //         type: rows[0].type,
-    //         comment: rows[0].comment,
-    //         status: rows[0].status,
-    //         location: rows[0].location,
-    //         labels: rows[0].labels,
-    //         images: rows[0].images,
-    //         videos: rows[0].videos,
-    //         createdOn: rows[0].created_on
-    //     }
-    //     res.status(200).json({
-    //         status: 200,
-    //         data: newItem
-    //     })
-    // }
-    // /**
-    // * @description This helps the authorized User to fetch all red-flag/intervention
-    // * @param  {object} req - The request object
-    // * @param  {object} res - The response object
-    // */
-    // static async getAll(req, res) {
-    //     const data = []
-    //     const fetch_text = 'SELECT * FROM flags'
+        const deleteOne = `DELETE FROM employees WHERE id=($1) returning *`
 
-    //     const { rows } = await pool.query(fetch_text)
-    //     await rows.forEach(item => {
-    //         const newItem = {
-    //             id: item.id,
-    //             createdBy: item.created_by,
-    //             title: item.title,
-    //             type: item.type,
-    //             comment: item.comment,
-    //             status: item.status,
-    //             location: item.location,
-    //             labels: item.labels,
-    //             images: item.images,
-    //             videos: item.videos,
-    //             createdOn: item.created_on
-    //         }
-    //         data.push({ ...newItem })
-    //     })
-
-    //     res.status(200).json({
-    //         status: 200,
-    //         data: data
-    //     })
-    // }
-    // /**
-    // * @description This helps the authorized User to delete their red-flag/intervention
-    // * @param  {object} req - The request object
-    // * @param  {object} res - The response object
-    // */
-    // static async delete(req, res) {
-    //     const { red_flag_id } = req.params
-    //     if (!checkInt(red_flag_id)) return responseMsg.errorMsg(res, 403, 'red-flag-id must be an integer and less than 8 in length')
-
-    //     const deleteOne = `DELETE FROM flags WHERE id=($1) returning *`
-    //     const fetch_text = 'SELECT * FROM flags WHERE id = $1'
-
-    //     const { rows } = await pool.query(fetch_text, [red_flag_id])
-    //     if (!rows[0]) {
-    //         return res.status(404).json({
-    //             status: 404,
-    //             message: 'red-flag-id not found'
-    //         });
-    //     }
-    //     if (res.token.id != rows[0].created_by || rows[0].status !== 'draft') return responseMsg.errorMsg(res, 403, 'you have no rights over this endpoint')
-    //     const response = await pool.query(deleteOne, [red_flag_id]);
-
-    //     res.status(200).json({
-    //         status: 200,
-    //         data: {
-    //             id: response.rows[0].id,
-    //             message: 'red-flag record has been deleted'
-    //         }
-    //     })
-    // }
+        const {rows} = await pool.query(deleteOne, [employee_id]);
+        if (rows.length == 0) {
+            return res.status(404).json({
+                status: 404,
+                message: 'employee not found'
+            });
+        }
+        res.status(200).json({
+            status: 200,
+            data: rows[0]
+        })
+    }
 }

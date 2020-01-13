@@ -3,15 +3,16 @@ import employeeController from '../controllers/employeeController'
 import authanticationJWT from "../middlewares/authJWT"
 import createEmployeeValidator from "../middlewares/employeeValidation/createEmployeeValidator"
 import employeeEditValidator from "../middlewares/employeeValidation/editEmployee"
-// import commentRedFlagValidator from "../middlewares/redFlagValidation/commentRedFlagValidator"
+import activateEmployeeValidator from "../middlewares/employeeValidation/activateEmployeeValidator"
+import suspendEmployeeValidator from "../middlewares/employeeValidation/suspendEmployeeValidator"
 
 
 const router = express.Router();
 router.post("/", authanticationJWT, createEmployeeValidator, employeeController.create)
 router.patch("/:employee_id", authanticationJWT, employeeEditValidator, employeeController.edit)
-// router.patch("/:red_flag_id/comment", authanticationJWT, commentRedFlagValidator, redFlagController.updateComment)
-// router.get("/:red_flag_id", authanticationJWT, redFlagController.getOne)
-// router.get("/", authanticationJWT, redFlagController.getAll)
-// router.delete("/:red_flag_id", authanticationJWT, redFlagController.delete)
+router.patch("/:employee_id/activate", authanticationJWT, activateEmployeeValidator, employeeController.activate)
+router.patch("/:employee_id/suspend", authanticationJWT, suspendEmployeeValidator, employeeController.suspend)
+router.get("/", authanticationJWT, employeeController.index)
+router.delete("/:employee_id", authanticationJWT, employeeController.delete)
 
 export default router;
