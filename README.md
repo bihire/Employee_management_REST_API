@@ -104,7 +104,7 @@ npm run ci
 | /api/v1/employees | POST | POST an an employee |
 | /api/v1/employees/`employee-id` | PATCH | Edit a specific employee info |
 | /api/v1/employees/`employee-id`/activate | PATCH | Update a specific employee's status to activated |
-| /api/v1/employees/`red-flag-id`/suspend | PATCH | Update a specific employee's status to suspended|
+| /api/v1/employees/`employee-id`/suspend | PATCH | Update a specific employee's status to suspended|
 | /api/v1/employees | GET | Get all the employees |
 | /api/v1/employees `?:search` | GET | Get all the matching employees |
 | /api/v1/employees/`employee-id` | DELETE | Delete an employee |
