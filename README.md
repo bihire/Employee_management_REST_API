@@ -4,7 +4,7 @@ A Restful API and database for an employee management system
 
 
 ### Heroku API
-[Employee_management_REST_API link](https://broadcaster-server.herokuapp.com/)
+[Employee_management_REST_API link](https://employeeman.herokuapp.com)
 
 ### Documentation of APIs
 [Endpoints documentation](https://documenter.getpostman.com/view/5339931/SWLiZ6L5)
